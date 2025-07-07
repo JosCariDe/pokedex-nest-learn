@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
 import { PokemonService } from './pokemon.service';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
@@ -8,7 +8,8 @@ export class PokemonController {
   constructor(private readonly pokemonService: PokemonService) {}
 
   @Post()
-  create(@Body() createPokemonDto: CreatePokemonDto) {
+  @HttpCode(HttpStatus.CREATED)  // SE puede colar el CODE como 200 201, etc, pero mejor usar la clase ENUM
+  create(@Body() createPokemonDto: CreatePokemonDto) { // Nos facilita todos los CODE de RESPONSE
     return this.pokemonService.create(createPokemonDto);
   }
 
