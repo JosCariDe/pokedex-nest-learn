@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, HttpCode } from '@nestjs/common';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
 import { isValidObjectId, Model } from 'mongoose';
@@ -22,11 +22,7 @@ export class PokemonService {
       const pokemon = await this.pokemonModel.create( createPokemonDto ); 
       return pokemon;
     } catch(error) { 
-      if (error.code == 11000) {       //! Para indicar en el errror los parametros que ya estan en la BD
-        throw new BadRequestException(`Pokemon exist in db ${JSON.stringify( error.keyValue )}`);
-      }
-      console.log(error);
-      throw new InternalServerErrorException(`Can´t create pokemon - CHECK SERVER LOGS`);
+      this.handleExceptions(error);
     }
 
   }
@@ -53,11 +49,30 @@ export class PokemonService {
     return pokemon;
   }
 
-  update(id: number, updatePokemonDto: UpdatePokemonDto) {
-    return `This action updates a #${id} pokemon`;
+  async update(id: string, updatePokemonDto: UpdatePokemonDto) {
+
+    try{
+      const pokemon: Pokemon = await this.findOne(id);
+
+      if (updatePokemonDto.name) updatePokemonDto.name = updatePokemonDto.name.toLocaleLowerCase();
+
+      await pokemon.updateOne(updatePokemonDto); 
+
+      return {...pokemon.toJSON(), ...updatePokemonDto};
+    }catch (e) {
+      this.handleExceptions(e); 
+    }
+
   }
 
   remove(id: number) {
     return `This action removes a #${id} pokemon`;
+  }
+
+  private handleExceptions( error:any ) {
+    if (error.code === 11000)
+      throw new BadRequestException(`Pokemon exist in db ${JSON.stringify( error.keyValue )}`);
+    console.log(error);
+    throw new InternalServerErrorException(`Can't create pokemon - CHECK SERVER LOGS`);
   }
 }
