@@ -1,9 +1,9 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
-import { Model } from 'mongoose';
+import { isValidObjectId, Model } from 'mongoose';
 import { Pokemon } from './entities/pokemon.entity';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel, Schema } from '@nestjs/mongoose';
 
 @Injectable()
 export class PokemonService {
@@ -35,8 +35,22 @@ export class PokemonService {
     return `This action returns all pokemon`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} pokemon`;
+  async findOne(id: string) {
+    let pokemon: Pokemon | null;
+    
+    //Buscar pokemon por el parametro "no"
+    if ( !isNaN(+id) ) {
+      pokemon = await this.pokemonModel.findOne({no: id});
+    }else if(isValidObjectId(id)) /* BUscar por ID MOngo*/ {
+      pokemon = await this.pokemonModel.findById(id)
+    }else  /* BUscar por name*/{
+      pokemon = await this.pokemonModel.findOne({name: id.toLocaleLowerCase().trim()})
+    }
+
+    // Evaluar si se encontró o no
+    if (pokemon == null) throw new NotFoundException(`El pokemon con el id "${id}" no fue encontrado en el DB`);
+
+    return pokemon;
   }
 
   update(id: number, updatePokemonDto: UpdatePokemonDto) {
