@@ -67,23 +67,22 @@ export class PokemonService {
 
   async remove(id: string) {
 
+
     try {
       
-      const pokemon = await this.findOne(id);
-
-      await pokemon.deleteOne();
+      const {deletedCount, acknowledged} = await this.pokemonModel.deleteOne({ _id: id });
+      
+      if (deletedCount === 0) throw new BadRequestException(`Pokemon whit id "${id}" not found`);
 
       return {
-        message: `Pokemon con el id ${id} eliminado correctamente del DB`,
-        data: pokemon
+        message: `Pokemon con el id ${id} eliminado correctamente del DB`
       }
 
     } catch (error) {
 
       console.log(error);
-      return{
-        error
-      }
+      
+      this.handleExceptions(error);
       
     }
     
