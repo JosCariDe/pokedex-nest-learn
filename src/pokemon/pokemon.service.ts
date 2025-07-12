@@ -27,6 +27,20 @@ export class PokemonService {
 
   }
 
+  async createAll(listaPokemonesDto: CreatePokemonDto[]) {
+
+    try {
+      listaPokemonesDto.forEach((pokemon) => {
+        this.pokemonModel.create(pokemon);
+      })
+
+      return {
+        data: listaPokemonesDto
+      }
+    } catch (error) {
+    }
+  }
+
   findAll() {
     return `This action returns all pokemon`;
   }
