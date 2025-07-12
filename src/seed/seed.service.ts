@@ -19,28 +19,55 @@ export class SeedService {
   ){}
 
 
-  
+  /* METODO 1
   async exetuceSeed() {
+
+    await this.pokemonModel.deleteMany({}); //ELIMINAR TODOS LOS REGISTROS DEL DB CUIDADO!!!!!
 
     const {data} = await this.axios.get<PokeResponse>('https://pokeapi.co/api/v2/pokemon?limit=10');
     //console.log(fetch);
 
-    data.results.forEach(async ({name, url}) => {
+    const insertPromiseArray: Promise<any>[] = [];
+
+    data.results.forEach( ({name, url}) => {
       const segment = url.split('/');
       console.log(segment);
       const no: number = +segment[segment.length - 2];
       console.log({name, no});
 
-      try {
-        await this.pokemonModel.create({name, no});
-      } catch (error) {
-        console.log(error);
-        //throw new BadRequestException(`Error al poblar el DB`);
-      }
-
+      insertPromiseArray.push(
+        this.pokemonModel.create({name, no})
+      );
     })
 
+    await Promise.all( insertPromiseArray );
+
     return data.results; 
+
+  } */
+
+    // MTEOTODO 2
+  async exetuceSeed() {
+
+    await this.pokemonModel.deleteMany({}); //ELIMINAR TODOS LOS REGISTROS DEL DB CUIDADO!!!!!
+
+    const {data} = await this.axios.get<PokeResponse>('https://pokeapi.co/api/v2/pokemon?limit=650');
+    //console.log(fetch);
+
+    const pokemonToInsert: {name: string, no: number}[] = [];
+
+    data.results.forEach( ({name, url}) => {
+      const segment = url.split('/');
+      //console.log(segment);
+      const no: number = +segment[segment.length - 2];
+      //console.log({name, no});
+
+      pokemonToInsert.push({name, no});
+    })
+
+    await this.pokemonModel.insertMany(pokemonToInsert); //AHora solo se hace una sola inserción
+
+    return 'Seed ejecutado'; 
 
   }
 
